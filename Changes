@@ -1,3 +1,6 @@
+0.06    18 September 2004
+        Use "ignore_case" parameter when picking up Recent Changes.
+
 0.05    18 September 2004
         Added "filter_on_metadata" option.
 

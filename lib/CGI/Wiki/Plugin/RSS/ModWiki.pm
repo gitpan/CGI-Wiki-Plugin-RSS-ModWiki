@@ -3,7 +3,7 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 use XML::RSS;
 use Time::Piece;
@@ -205,7 +205,7 @@ sub recent_changes {
     # If we're not passed any parameters to limit the items returned,
     # default to 15, which is apparently the modwiki standard.
     my $wiki = $self->{wiki};
-    my %criteria;
+    my %criteria = ( ignore_case => 1 );
     if ( $args{days} ) {
         $criteria{days} = $args{days};
     } else {
