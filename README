@@ -1,0 +1,128 @@
+NAME
+      CGI::Wiki::Plugin::RSS::ModWiki - A CGI::Wiki plugin to output RecentChanges RSS.
+
+DESCRIPTION
+    This is an alternative access to the recent changes of a CGI::Wiki wiki.
+    It outputs RSS as described by the ModWiki proposal at
+    <http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
+
+SYNOPSIS
+      use CGI::Wiki;
+      use CGI::Wiki::Plugin::RSS::ModWiki;
+
+      my $wiki = CGI::Wiki->new( ... );  # See perldoc CGI::Wiki
+
+      # Set up the RSS feeder with the mandatory arguments - see C<new> below
+      # for more, optional, arguments.
+      my $rss = CGI::Wiki::Plugin::RSS::ModWiki->new(
+          wiki                 => $wiki,
+          site_name            => "My Wiki",
+          make_node_url        => sub {
+              my ($node_name, $version) = @_;
+              return "http://example.com/wiki.cgi?id="
+                   . uri_escape($node_name)
+                   . ";version=" . uri_escape($version);
+                                      },
+          recent_changes_link  => "http://example.com/wiki.cgi?RecentChanges"
+      );
+
+      print "Content-type: application/xml\n\n";
+      print $rss->recent_changes;
+
+METHODS
+    new
+          my $rss = CGI::Wiki::Plugin::RSS::ModWiki->new(
+              wiki                 => $wiki,
+              site_name            => "My Wiki",
+              make_node_url        => sub {
+                  my ($node_name, $version) = @_;
+                  return "http://example.com/wiki.cgi?id="
+                       . uri_escape($node_name)
+                       . ";version=" . uri_escape($version);
+                                          },
+              recent_changes_link  => "http://example.com/wiki.cgi?RecentChanges",
+          # Those above were mandatory, those below are optional.
+              site_description     => "My wiki about my stuff",
+              interwiki_identifier => "KakesWiki",
+              make_diff_url        => sub {
+                  my $node_name = shift;
+                  return "http://example.com/wiki.cgi?action=show_diff;id="
+                       . uri_escape($node_name)
+                                          },
+              make_history_url     => sub {
+                  my $node_name = shift;
+                  return "http://example.com/wiki.cgi?action=history;id="
+                       . uri_escape($node_name)
+                                          },
+          );
+
+        "wiki" must be a CGI::Wiki object. "make_node_url", and
+        "make_diff_url" and "make_history_url", if supplied, must be
+        coderefs.
+
+        NOTE: If you try to put ampersands ("&") in your URLs then XML::RSS
+        will escape them to "&amp;", so use semicolons (";") to separate any
+        CGI parameter pairs instead.
+
+        The mandatory arguments are:
+
+        * wiki
+        * site_name
+        * make_node_url
+        * recent_changes_link
+
+    recent_changes
+          $wiki->write_node( "About This Wiki",
+                             "blah blah blah content",
+                             $checksum,
+                             { comment  => "Stub page, please update!",
+                               username => "Kake"
+                             }
+          );
+
+          print "Content-type: application/xml\n\n";
+          print $rss->recent_changes;
+
+        Note: Many of the fields emitted by the RSS generator are taken from
+        the node metadata. The form of this metadata is *not* mandated by
+        CGI::Wiki. Your wiki application should make sure to store some or
+        all of the following metadata when calling "write_node":
+
+        comment - a brief comment summarising the edit that has just been
+        made; will be used as the RDF description for this item. Defaults to
+        the empty string.
+        username - an identifier for the person who made the edit; will be
+        used as the RDF author for this item. Defaults to the empty string.
+        host - the hostname or IP address of the computer used to make the
+        edit; if no username is supplied then this will be used as the RDF
+        author for this item. Defaults to the empty string.
+        major_change - true if the edit was a major edit and false if it was
+        a minor edit; used for the importance of the item. Defaults to true
+        (ie if "major_change" was not defined or was explicitly stored as
+        "undef").
+
+        Currently this is very simple and only emits the last 15 changes,
+        major or minor. There are interesting parameters at
+        <http://www.usemod.com/cgi-bin/wiki.pl?WikiPatches/XmlRss> that I
+        will get around to implementing at some point.
+
+SEE ALSO
+        * CGI::Wiki
+        * <http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
+
+AUTHOR
+        Kake Pugh (kake@earth.li).
+
+COPYRIGHT
+             Copyright (C) 2003 Kake Pugh.  All Rights Reserved.
+
+        This module is free software; you can redistribute it and/or modify
+        it under the same terms as Perl itself.
+
+CREDITS
+        The people on #core on irc.rhizomatic.net gave encouragement and
+        useful advice.
+
+        I cribbed some of this code from
+        <http://www.usemod.com/cgi-bin/wiki.pl?WikiPatches/XmlRss>
+

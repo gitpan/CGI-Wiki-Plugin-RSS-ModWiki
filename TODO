@@ -1,0 +1,44 @@
+
+----------------------------------------------------------------------
+
+Currently this is very simple and only emits the last 15 changes,
+major or minor. There are interesting parameters at
+http://www.usemod.com/cgi-bin/wiki.pl?WikiPatches/XmlRss that I will
+get around to implementing at some point.
+
+----------------------------------------------------------------------
+
+I haven't yet worked out how to make XML::RSS emit, for example,
+
+        <rss:channel rdf:about="http://openwiki.com">
+            ...
+            <wiki:interwiki>
+                <rdf:Description rss:link="http://openwiki.com/?">
+                    <rdf:value>OpenWiki</rdf:value>
+                </rdf:Description>
+            </wiki:interwiki>
+        </rss:channel>
+
+instead of
+
+        <rss:channel rdf:about="http://openwiki.com">
+            ...
+            <wiki:interwiki>OpenWiki</wiki:interwiki>
+        </rss:channel>
+
+So the following things specified at
+  http://www.usemod.com/cgi-bin/mb.pl?ModWiki
+aren't yet implemented:
+
+  interwiki prefix
+  host of contributor
+  URI link for contributor
+
+
+It does however seem (see
+http://www.usemod.com/cgi-bin/mb.pl?ModWikiDiscussion) that maybe this
+syntax doesn't need to be supported. There is also a lot of other
+discussion on that page about things that don't seem to have settled
+down, so I'm not going to try implementing them yet.
+
+----------------------------------------------------------------------
