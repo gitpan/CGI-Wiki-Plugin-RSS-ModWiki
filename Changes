@@ -1,0 +1,12 @@
+0.03    4 May 2003
+        Forgot to put the sodding Changes file in MANIFEST.  Doing it now
+          or I *will* forget.
+
+0.02    4 May 2003
+        Added 'items' and 'days' arguments to ->recent_changes - so you can
+          ask for 'the last 20 changes', or 'all changes in the past 7 days'.
+        Added username in with the description - it's nice to see easily *who*
+          made a change.
+
+0.01    6 April 2003
+        Initial release.

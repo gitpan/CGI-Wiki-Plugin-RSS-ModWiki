@@ -3,7 +3,7 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 use XML::RSS;
 use Time::Piece;
