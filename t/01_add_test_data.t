@@ -18,6 +18,21 @@ while ( ($store_name, $store) = each %stores ) {
 
       my $wiki = CGI::Wiki->new( store => $store );
 
+      $wiki->write_node( "Old Node",
+                         "We will write at least 15 nodes after this one" );
+
+      my $slept = sleep(2);
+      warn "Slept for less than a second, 'days=n' test may pass even if buggy"
+        unless $slept >= 1;
+
+      for my $i ( 1 .. 15 ) {
+          $wiki->write_node( "Temp Node $i", "foo" );
+      }
+
+      $slept = sleep(2);
+      warn "Slept for less than a second, test results may not be trustworthy"
+        unless $slept >= 1;
+
       $wiki->write_node( "Test Node 1",
                          "Just a plain test",
 			 undef,
@@ -25,6 +40,10 @@ while ( ($store_name, $store) = each %stores ) {
 			   comment  => "new node",
 			 }
 		       );
+
+      $slept = sleep(2);
+      warn "Slept for less than a second, 'items=n' test may fail"
+        unless $slept >= 1;
 
       $wiki->write_node( "Calthorpe Arms",
 		         "CAMRA-approved pub near King's Cross",
@@ -35,6 +54,14 @@ while ( ($store_name, $store) = each %stores ) {
 			   locale   => [ "Bloomsbury" ]
                          }
       );
+
+      $wiki->write_node( "Test Node 2",
+                         "Gosh, another test!",
+                         undef,
+                         { username => "nou",
+                           comment  => "testy testy",
+                         }
+                       );
 
       pass "$store_name test backend primed with test data";
     }

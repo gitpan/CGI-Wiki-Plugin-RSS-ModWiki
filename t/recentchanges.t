@@ -1,9 +1,10 @@
+use strict;
 use CGI::Wiki::TestConfig::Utilities;
 use CGI::Wiki;
 use URI::Escape;
 
 use Test::More tests =>
-  (3 + 11 * $CGI::Wiki::TestConfig::Utilities::num_stores);
+  (3 + 14 * $CGI::Wiki::TestConfig::Utilities::num_stores);
 
 use_ok( "CGI::Wiki::Plugin::RSS::ModWiki" );
 
@@ -20,7 +21,7 @@ my %stores = CGI::Wiki::TestConfig::Utilities->stores;
 my ($store_name, $store);
 while ( ($store_name, $store) = each %stores ) {
   SKIP: {
-      skip "$store_name storage backend not configured for testing", 11
+      skip "$store_name storage backend not configured for testing", 14
           unless $store;
 
       print "#\n##### TEST CONFIG: Store: $store_name\n#\n";
@@ -62,6 +63,9 @@ while ( ($store_name, $store) = each %stores ) {
       like( $feed, qr|<dc:contributor>Kake</dc:contributor>|,
 	    "username picked up as contributor" );
 
+      like( $feed, qr|<description>testy testy \[nou]</description>|,
+            "username included in description" );
+
       # Check that interwiki things are passed through right.
       $rss = CGI::Wiki::Plugin::RSS::ModWiki->new(
           %default_config,
@@ -97,5 +101,12 @@ while ( ($store_name, $store) = each %stores ) {
       like( $feed, qr|<wiki:history>http://example.com/\?action=history;id=Calthorpe%20Arms</wiki:history>|,
 	    "make_history_url used" );
 
+      # Test the 'items' parameter.
+      $feed = $rss->recent_changes( items => 2 );
+      unlike( $feed, qr|<title>Test Node 1</title>|, "items param works" );
+
+      # Test the 'days' parameter.
+      $feed = $rss->recent_changes( days => 2 );
+      like( $feed, qr|<title>Old Node</title>|, "days param works" );
   }
 }

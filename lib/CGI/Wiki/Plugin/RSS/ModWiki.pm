@@ -3,7 +3,7 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 use XML::RSS;
 use Time::Piece;
@@ -138,6 +138,10 @@ sub _init {
   print "Content-type: application/xml\n\n";
   print $rss->recent_changes;
 
+  # Or get something other than the default of the latest 15 changes.
+  print $rss->recent_changes( items => 50 );
+  print $rss->recent_changes( days => 7 );
+
 B<Note:> Many of the fields emitted by the RSS generator are taken
 from the node metadata. The form of this metadata is I<not> mandated
 by CGI::Wiki. Your wiki application should make sure to store some or
@@ -145,25 +149,20 @@ all of the following metadata when calling C<write_node>:
 
 =over 4
 
-=item B<comment> - a brief comment summarising the edit that has just been made; will be used as the RDF description for this item.  Defaults to the empty string.
+=item B<comment> - a brief comment summarising the edit that has just been made; will be used in the RDF description for this item.  Defaults to the empty string.
 
-=item B<username> - an identifier for the person who made the edit; will be used as the RDF author for this item.  Defaults to the empty string.
+=item B<username> - an identifier for the person who made the edit; will be used as the Dublin Core contributor for this item, and also in the RDF description.  Defaults to the empty string.
 
-=item B<host> - the hostname or IP address of the computer used to make the edit; if no username is supplied then this will be used as the RDF author for this item.  Defaults to the empty string.
+=item B<host> - the hostname or IP address of the computer used to make the edit; if no username is supplied then this will be used as the Dublin Core contributor for this item.  Defaults to the empty string.
 
 =item B<major_change> - true if the edit was a major edit and false if it was a minor edit; used for the importance of the item.  Defaults to true (ie if C<major_change> was not defined or was explicitly stored as C<undef>).
 
 =back
 
-Currently this is very simple and only emits the last 15 changes,
-major or minor. There are interesting parameters at
-L<http://www.usemod.com/cgi-bin/wiki.pl?WikiPatches/XmlRss> that I will
-get around to implementing at some point.
-
 =cut
 
 sub recent_changes {
-    my $self = shift;
+    my ($self, %args) = @_;
 
     my $rss = new XML::RSS (version => '1.0');
 
@@ -187,9 +186,16 @@ sub recent_changes {
         }
     );
 
-    # Get the latest 15 changes.
+    # If we're not passed any parameters to limit the items returned,
+    # default to 15, which is apparently the modwiki standard.
     my $wiki = $self->{wiki};
-    my @changes = $wiki->list_recent_changes( last_n_changes => 15 );
+    my @changes;
+    if ( $args{days} ) {
+        @changes = $wiki->list_recent_changes( days => $args{days} );
+    } else {
+        my $items = $args{items} || 15;
+        @changes = $wiki->list_recent_changes( last_n_changes => $items );
+    }
     foreach my $change (@changes) {
         my $node_name   = $change->{name};
 
@@ -200,9 +206,11 @@ sub recent_changes {
 	my $time = Time::Piece->strptime( $timestamp, $timestamp_fmt );
 	$timestamp = $time->strftime( "%Y-%m-%dT%H:%M:%S" );
 
-        my $description = $change->{metadata}{comment}[0] || "";
         my $author      = $change->{metadata}{username}[0]
 	                    || $change->{metadata}{host}[0] || "";
+
+        my $description = $change->{metadata}{comment}[0] || "";
+        $description .= " [$author]" if $author;
 
         my $version = $change->{version};
         my $status = (1 == $version) ? 'new' : 'updated';

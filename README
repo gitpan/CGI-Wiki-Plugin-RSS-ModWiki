@@ -83,28 +83,28 @@ METHODS
           print "Content-type: application/xml\n\n";
           print $rss->recent_changes;
 
+          # Or get something other than the default of the latest 15 changes.
+          print $rss->recent_changes( items => 50 );
+          print $rss->recent_changes( days => 7 );
+
         Note: Many of the fields emitted by the RSS generator are taken from
         the node metadata. The form of this metadata is *not* mandated by
         CGI::Wiki. Your wiki application should make sure to store some or
         all of the following metadata when calling "write_node":
 
         comment - a brief comment summarising the edit that has just been
-        made; will be used as the RDF description for this item. Defaults to
+        made; will be used in the RDF description for this item. Defaults to
         the empty string.
         username - an identifier for the person who made the edit; will be
-        used as the RDF author for this item. Defaults to the empty string.
+        used as the Dublin Core contributor for this item, and also in the
+        RDF description. Defaults to the empty string.
         host - the hostname or IP address of the computer used to make the
-        edit; if no username is supplied then this will be used as the RDF
-        author for this item. Defaults to the empty string.
+        edit; if no username is supplied then this will be used as the
+        Dublin Core contributor for this item. Defaults to the empty string.
         major_change - true if the edit was a major edit and false if it was
         a minor edit; used for the importance of the item. Defaults to true
         (ie if "major_change" was not defined or was explicitly stored as
         "undef").
-
-        Currently this is very simple and only emits the last 15 changes,
-        major or minor. There are interesting parameters at
-        <http://www.usemod.com/cgi-bin/wiki.pl?WikiPatches/XmlRss> that I
-        will get around to implementing at some point.
 
 SEE ALSO
         * CGI::Wiki
