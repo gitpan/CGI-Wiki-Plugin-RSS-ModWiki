@@ -3,7 +3,7 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 use XML::RSS;
 use Time::Piece;
@@ -146,6 +146,18 @@ sub _init {
   # Or ignore minor changes.
   print $rss->recent_changes( ignore_minor_changes => 1 );
 
+  # Personalise your feed further - consider only changes
+  # made by Kake to pages about pubs.
+  print $rss->recent_changes(
+                       filter_on_metadata => {
+                                               username => "Kake",
+                                               category => "Pubs",
+                                             },
+                            );
+
+If using C<filter_on_metadata> note that only changes satisfying
+I<all> criteria will be returned.
+
 B<Note:> Many of the fields emitted by the RSS generator are taken
 from the node metadata. The form of this metadata is I<not> mandated
 by CGI::Wiki. Your wiki application should make sure to store some or
@@ -201,6 +213,9 @@ sub recent_changes {
     }
     if ( $args{ignore_minor_changes} ) {
         $criteria{metadata_wasnt} = { major_change => 0 };
+    }
+    if ( $args{filter_on_metadata} ) {
+        $criteria{metadata_was} = $args{filter_on_metadata};
     }
     my @changes = $wiki->list_recent_changes( %criteria );
     foreach my $change (@changes) {

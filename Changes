@@ -1,3 +1,6 @@
+0.05    18 September 2004
+        Added "filter_on_metadata" option.
+
 0.04    18 September 2004
         Added "ignore_minor_changes" option.
 

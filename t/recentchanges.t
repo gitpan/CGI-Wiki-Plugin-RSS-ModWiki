@@ -4,7 +4,7 @@ use CGI::Wiki;
 use URI::Escape;
 
 use Test::More tests =>
-  (3 + 15 * $CGI::Wiki::TestConfig::Utilities::num_stores);
+  (3 + 17 * $CGI::Wiki::TestConfig::Utilities::num_stores);
 
 use_ok( "CGI::Wiki::Plugin::RSS::ModWiki" );
 
@@ -21,7 +21,7 @@ my %stores = CGI::Wiki::TestConfig::Utilities->stores;
 my ($store_name, $store);
 while ( ($store_name, $store) = each %stores ) {
   SKIP: {
-      skip "$store_name storage backend not configured for testing", 15
+      skip "$store_name storage backend not configured for testing", 17
           unless $store;
 
       print "#\n##### TEST CONFIG: Store: $store_name\n#\n";
@@ -113,5 +113,23 @@ while ( ($store_name, $store) = each %stores ) {
       $feed = $rss->recent_changes( ignore_minor_changes => 1 );
       unlike( $feed, qr|This is a minor change.|,
               "ignore_minor_changes works" );
+
+      # Test personalised feeds.
+      $feed = $rss->recent_changes(
+                                    filter_on_metadata => {
+                                                            username => "Kake",
+                                                          },
+                                  );
+      unlike( $feed, qr|<dc:contributor>nou</dc:contributor>|,
+	      "can filter on a single metadata criterion" );
+
+      $feed = $rss->recent_changes(
+                                    filter_on_metadata => {
+                                                      username => "Kake",
+                                                      locale   => "Bloomsbury",
+                                                          },
+                                  );
+      unlike( $feed, qr|<title>Test Node 1</title>|,
+              "can filter on two criteria" );
   }
 }
