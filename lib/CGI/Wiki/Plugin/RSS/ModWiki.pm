@@ -3,7 +3,7 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 use XML::RSS;
 use Time::Piece;
@@ -27,18 +27,18 @@ L<http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
 
   my $wiki = CGI::Wiki->new( ... );  # See perldoc CGI::Wiki
 
-  # Set up the RSS feeder with the mandatory arguments - see C<new> below
-  # for more, optional, arguments.
+  # Set up the RSS feeder with the mandatory arguments - see
+  # C<new> below for more, optional, arguments.
   my $rss = CGI::Wiki::Plugin::RSS::ModWiki->new(
       wiki                 => $wiki,
       site_name            => "My Wiki",
       make_node_url        => sub {
-          my ($node_name, $version) = @_;
-          return "http://example.com/wiki.cgi?id="
-               . uri_escape($node_name)
-               . ";version=" . uri_escape($version);
+                                    my ($node_name, $version) = @_;
+                                    return "http://example.com/?id="
+                                    . uri_escape($node_name)
+                                    . ";version=" . uri_escape($version);
                                   },
-      recent_changes_link  => "http://example.com/wiki.cgi?RecentChanges"
+      recent_changes_link  => "http://example.com/?RecentChanges",
   );
 
   print "Content-type: application/xml\n\n";
@@ -54,24 +54,24 @@ L<http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
       wiki                 => $wiki,
       site_name            => "My Wiki",
       make_node_url        => sub {
-          my ($node_name, $version) = @_;
-          return "http://example.com/wiki.cgi?id="
-               . uri_escape($node_name)
-               . ";version=" . uri_escape($version);
+                                my ($node_name, $version) = @_;
+                                return "http://example.com/?id="
+                                . uri_escape($node_name)
+                                . ";version=" . uri_escape($version);
                                   },
-      recent_changes_link  => "http://example.com/wiki.cgi?RecentChanges",
+      recent_changes_link  => "http://example.com/?RecentChanges",
   # Those above were mandatory, those below are optional.
       site_description     => "My wiki about my stuff",
       interwiki_identifier => "KakesWiki",
       make_diff_url        => sub {
-          my $node_name = shift;
-          return "http://example.com/wiki.cgi?action=show_diff;id="
-               . uri_escape($node_name)
+                                   my $node_name = shift;
+                                   return "http://example.com/?diff="
+                                          . uri_escape($node_name)
                                   },
       make_history_url     => sub {
-          my $node_name = shift;
-          return "http://example.com/wiki.cgi?action=history;id="
-               . uri_escape($node_name)
+                                   my $node_name = shift;
+                                   return "http://example.com/?hist="
+                                          . uri_escape($node_name)
                                   },
   );
 
@@ -130,7 +130,8 @@ sub _init {
   $wiki->write_node( "About This Wiki",
 		     "blah blah blah content",
 		     $checksum,
-		     { comment  => "Stub page, please update!",
+		     {
+                       comment  => "Stub page, please update!",
 		       username => "Kake"
                      }
   );
@@ -141,6 +142,9 @@ sub _init {
   # Or get something other than the default of the latest 15 changes.
   print $rss->recent_changes( items => 50 );
   print $rss->recent_changes( days => 7 );
+
+  # Or ignore minor changes.
+  print $rss->recent_changes( ignore_minor_changes => 1 );
 
 B<Note:> Many of the fields emitted by the RSS generator are taken
 from the node metadata. The form of this metadata is I<not> mandated
@@ -189,13 +193,16 @@ sub recent_changes {
     # If we're not passed any parameters to limit the items returned,
     # default to 15, which is apparently the modwiki standard.
     my $wiki = $self->{wiki};
-    my @changes;
+    my %criteria;
     if ( $args{days} ) {
-        @changes = $wiki->list_recent_changes( days => $args{days} );
+        $criteria{days} = $args{days};
     } else {
-        my $items = $args{items} || 15;
-        @changes = $wiki->list_recent_changes( last_n_changes => $items );
+        $criteria{last_n_changes} = $args{items} || 15;
     }
+    if ( $args{ignore_minor_changes} ) {
+        $criteria{metadata_wasnt} = { major_change => 0 };
+    }
+    my @changes = $wiki->list_recent_changes( %criteria );
     foreach my $change (@changes) {
         my $node_name   = $change->{name};
 
@@ -267,7 +274,7 @@ Kake Pugh (kake@earth.li).
 
 =head1 COPYRIGHT
 
-     Copyright (C) 2003 Kake Pugh.  All Rights Reserved.
+     Copyright (C) 2003-4 Kake Pugh.  All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

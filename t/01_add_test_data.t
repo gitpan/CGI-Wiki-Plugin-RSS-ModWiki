@@ -58,8 +58,10 @@ while ( ($store_name, $store) = each %stores ) {
       $wiki->write_node( "Test Node 2",
                          "Gosh, another test!",
                          undef,
-                         { username => "nou",
-                           comment  => "testy testy",
+                         {
+                           username     => "nou",
+                           comment      => "This is a minor edit.",
+                           major_change => 0,
                          }
                        );
 
