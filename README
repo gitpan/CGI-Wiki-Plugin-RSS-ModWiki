@@ -106,23 +106,30 @@ METHODS
         (ie if "major_change" was not defined or was explicitly stored as
         "undef").
 
+    rss_timestamp
+          print $rss->rss_timestamp();
+                    
+        Returns the timestamp of the feed in POSIX::strftime style ("Tue, 29 
+        Feb 2000 12:34:56 GMT"), which is equivalent to the timestamp of the 
+        most recent item in the feed. Takes the same arguments as 
+        recent_changes(). You will most likely need this to print a 
+        Last-Modified HTTP header so user-agents can determine whether they
+        need to reload the feed or not.
+           
 SEE ALSO
         * CGI::Wiki
         * <http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
 
-AUTHOR
-        Kake Pugh (kake@earth.li).
+MAINTAINER
+        Earle Martin <EMARTIN@cpan.org>. Originally by Kake Pugh <kake@earth.li>.
 
-COPYRIGHT
-             Copyright (C) 2003 Kake Pugh.  All Rights Reserved.
+COPYRIGHT AND LICENSE
+        Copyright 2003-4 Kake Pugh. Subsequent modifications copyright 2005
+        Earle Martin.
 
         This module is free software; you can redistribute it and/or modify
         it under the same terms as Perl itself.
 
 CREDITS
-        The people on #core on irc.rhizomatic.net gave encouragement and
+        The people on #swig on irc.freenode.net gave encouragement and
         useful advice.
-
-        I cribbed some of this code from
-        <http://www.usemod.com/cgi-bin/wiki.pl?WikiPatches/XmlRss>
-

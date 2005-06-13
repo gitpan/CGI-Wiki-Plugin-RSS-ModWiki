@@ -1,3 +1,7 @@
+0.07    13 June 2005
+        Remove dependency on XML::RSS.
+        New rss_timestamp() method.
+
 0.06    18 September 2004
         Use "ignore_case" parameter when picking up Recent Changes.
 
@@ -8,8 +12,7 @@
         Added "ignore_minor_changes" option.
 
 0.03    4 May 2003
-        Forgot to put the sodding Changes file in MANIFEST.  Doing it now
-          or I *will* forget.
+        Added missing Changes file to MANIFEST.
 
 0.02    4 May 2003
         Added 'items' and 'days' arguments to ->recent_changes - so you can

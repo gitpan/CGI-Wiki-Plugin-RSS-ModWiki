@@ -3,9 +3,8 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.06';
+$VERSION = '0.07';
 
-use XML::RSS;
 use Time::Piece;
 use URI::Escape;
 use Carp qw( croak );
@@ -77,10 +76,6 @@ L<http://www.usemod.com/cgi-bin/mb.pl?ModWiki>
 
 C<wiki> must be a L<CGI::Wiki> object. C<make_node_url>, and
 C<make_diff_url> and C<make_history_url>, if supplied, must be coderefs.
-
-B<NOTE:> If you try to put ampersands (C<&>) in your URLs then
-L<XML::RSS> will escape them to C<&amp;>, so use semicolons (C<;>) to
-separate any CGI parameter pairs instead.
 
 The mandatory arguments are:
 
@@ -180,32 +175,13 @@ all of the following metadata when calling C<write_node>:
 sub recent_changes {
     my ($self, %args) = @_;
 
-    my $rss = new XML::RSS (version => '1.0');
-
-    $rss->add_module(
-        prefix => 'wiki',
-        uri    => 'http://purl.org/rss/1.0/modules/wiki/'
-    );
-
-    my $time = localtime;
-    my $timestamp = $time->strftime( "%Y-%m-%dT%H:%M:%S" );
-
-    $rss->channel(
-        title         => $self->{site_name},
-        link          => $self->{recent_changes_link},
-        description   => $self->{site_description},
-        dc => {
-            date        => $timestamp
-        },
-        wiki => {
-            interwiki   => $self->{interwiki_identifier}
-        }
-    );
+    my $wiki = $self->{wiki};
 
     # If we're not passed any parameters to limit the items returned,
     # default to 15, which is apparently the modwiki standard.
-    my $wiki = $self->{wiki};
+
     my %criteria = ( ignore_case => 1 );
+
     if ( $args{days} ) {
         $criteria{days} = $args{days};
     } else {
@@ -217,16 +193,39 @@ sub recent_changes {
     if ( $args{filter_on_metadata} ) {
         $criteria{metadata_was} = $args{filter_on_metadata};
     }
+
     my @changes = $wiki->list_recent_changes( %criteria );
+
+    my $rss_timestamp = $self->rss_timestamp(%args);
+
+    my $rss = qq{<?xml version="1.0" encoding="UTF-8"?>
+
+<rdf:RDF
+ xmlns       = "http://purl.org/rss/1.0/"
+ xmlns:dc    = "http://purl.org/dc/elements/1.1/"
+ xmlns:wiki  = "http://purl.org/rss/1.0/modules/wiki/"
+ xmlns:rdf   = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:rdfs  = "http://www.w3.org/2000/01/rdf-schema#"
+>
+
+<channel rdf:about="} . $self->{recent_changes_link}  . qq{">
+<title>}              . $self->{site_name}            . qq{</title>
+<link>}               . $self->{recent_changes_link}  . qq{</link>
+<description>}        . $self->{site_description}     . qq{</description>
+<dc:date>}            . $rss_timestamp                    . qq{</dc:date>
+<wiki:interwiki>}     . $self->{interwiki_identifier} . qq{</wiki:interwiki>};
+
+    my (@urls, @items);
+
     foreach my $change (@changes) {
         my $node_name   = $change->{name};
 
         my $timestamp = $change->{last_modified};
-	# Make a Time::Piece object.
+        # Make a Time::Piece object.
         my $timestamp_fmt = $CGI::Wiki::Store::Database::timestamp_fmt;
-#        my $timestamp_fmt = $wiki->{store}->timestamp_fmt;
-	my $time = Time::Piece->strptime( $timestamp, $timestamp_fmt );
-	$timestamp = $time->strftime( "%Y-%m-%dT%H:%M:%S" );
+
+        my $time = Time::Piece->strptime( $timestamp, $timestamp_fmt );
+        $timestamp = $time->strftime( "%Y-%m-%dT%H:%M:%S" );
 
         my $author      = $change->{metadata}{username}[0]
 	                    || $change->{metadata}{host}[0] || "";
@@ -242,35 +241,88 @@ sub recent_changes {
 
         my $url = $self->{make_node_url}->( $node_name, $version );
 
+        push @urls, qq{    <rdf:li rdf:resource="$url" />\n};
+
         my $diff_url = "";
         if ( $self->{make_diff_url} ) {
-	    $diff_url = $self->{make_diff_url}->( $node_name );
-	}
+	        $diff_url = $self->{make_diff_url}->( $node_name );
+	      }
 
         my $history_url = "";
         if ( $self->{make_history_url} ) {
-	    $history_url = $self->{make_history_url}->( $node_name );
-	}
+          $history_url = $self->{make_history_url}->( $node_name );
+        }
 
-        $rss->add_item(
-            title         => $node_name,
-            link          => $url,
-            description   => $description,
-            dc => {
-                date        => $timestamp,
-                contributor => $author,
-            },
-            wiki => {
-                status      => $status,
-                importance  => $importance,
-                diff        => $diff_url,
-                version     => $version,
-                history     => $history_url
-            },
-        );
+        my $node_url = $self->{make_node_url}->( $node_name );
+
+        my $rdf_url = $node_url;
+        $rdf_url =~ s/\?/\?id=/;
+        $rdf_url .= ';format=rdf';
+        
+        push @items, qq{
+<item rdf:about="$url">
+  <title>$node_name</title>
+  <link>$url</link>
+  <description>$description</description>
+  <dc:date>$timestamp</dc:date>
+  <dc:contributor>$author</dc:contributor>
+  <wiki:status>$status</wiki:status>
+  <wiki:importance>$importance</wiki:importance>
+  <wiki:diff>$diff_url</wiki:diff>
+  <wiki:version>$version</wiki:version>
+  <wiki:history>$history_url</wiki:history>
+  <rdfs:seeAlso rdf:resource="$rdf_url" />
+</item>
+};
     }
+    
+    $rss .= qq{
+<items>
+  <rdf:Seq>
+} . join('', @urls) . qq{  </rdf:Seq>
+</items>
+</channel>
+} . join('', @items) . "\n</rdf:RDF>\n";
+ 
+    return $rss;   
+}
 
-    return $rss->as_string;
+=item B<rss_timestamp>
+
+  print $rss->rss_timestamp();
+
+Returns the timestamp of the feed in POSIX::strftime style ("Tue, 29 Feb 2000 
+12:34:56 GMT"), which is equivalent to the timestamp of the most recent item 
+in the feed. Takes the same arguments as recent_changes(). You will most likely
+need this to print a Last-Modified HTTP header so user-agents can determine
+whether they need to reload the feed or not.
+  
+=cut
+
+sub rss_timestamp {
+  my ($self, %args) = @_;
+  
+  my %criteria = ( ignore_case => 1 );
+
+  if ( $args{days} ) {
+    $criteria{days} = $args{days};
+  } else {
+    $criteria{last_n_changes} = $args{items} || 15;
+  }
+  if ( $args{ignore_minor_changes} ) {
+    $criteria{metadata_wasnt} = { major_change => 0 };
+  }
+  if ( $args{filter_on_metadata} ) {
+    $criteria{metadata_was} = $args{filter_on_metadata};
+  }
+
+  my @changes = $self->{wiki}->list_recent_changes( %criteria );
+
+  my $last_change = $changes[0]->{last_modified};
+  my $timestamp_fmt = $CGI::Wiki::Store::Database::timestamp_fmt;
+  my $time = Time::Piece->strptime( $last_change, $timestamp_fmt );
+  
+  return $time->strftime;
 }
 
 =head1 SEE ALSO
@@ -283,24 +335,22 @@ sub recent_changes {
 
 =back
 
-=head1 AUTHOR
+=head1 MAINTAINER
 
-Kake Pugh (kake@earth.li).
+Earle Martin <EMARTIN@cpan.org>. Originally by Kake Pugh <kake@earth.li>.
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-     Copyright (C) 2003-4 Kake Pugh.  All Rights Reserved.
+Copyright 2003-4 Kake Pugh. Subsequent modifications copyright 2005 
+Earle Martin.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 =head1 CREDITS
 
-The people on #core on irc.rhizomatic.net gave encouragement and
+The people on #swig on irc.freenode.net gave encouragement and
 useful advice.
-
-I cribbed some of this code from
-L<http://www.usemod.com/cgi-bin/wiki.pl?WikiPatches/XmlRss>
 
 =cut
 
