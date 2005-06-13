@@ -1,3 +1,6 @@
+0.071   13 June 2005
+        Give a timestamp even if invoked when no actual changes exist.
+
 0.07    13 June 2005
         Remove dependency on XML::RSS.
         New rss_timestamp() method.

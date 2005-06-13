@@ -3,7 +3,7 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.07';
+$VERSION = '0.071';
 
 use Time::Piece;
 use URI::Escape;
@@ -318,11 +318,14 @@ sub rss_timestamp {
 
   my @changes = $self->{wiki}->list_recent_changes( %criteria );
 
-  my $last_change = $changes[0]->{last_modified};
-  my $timestamp_fmt = $CGI::Wiki::Store::Database::timestamp_fmt;
-  my $time = Time::Piece->strptime( $last_change, $timestamp_fmt );
+  if ($changes[0]->{last_modified}) {
+    my $timestamp_fmt = $CGI::Wiki::Store::Database::timestamp_fmt;
+    my $time = Time::Piece->strptime( $changes[0]->{last_modified}, $timestamp_fmt );
   
-  return $time->strftime;
+    return $time->strftime;
+  } else {
+    return 'Thu Jan 1 00:00:00 1970';
+  }
 }
 
 =head1 SEE ALSO
