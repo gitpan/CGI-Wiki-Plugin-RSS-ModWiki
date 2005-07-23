@@ -1,3 +1,8 @@
+0.072   23 July 2005
+        Change name of recent_changes() argument from "ignore_minor_changes"
+        to "ignore_minor_edits" for consistency with OpenGuides. The old 
+        name is still supported for the moment, but is deprecated.
+        
 0.071   13 June 2005
         Give a timestamp even if invoked when no actual changes exist.
 

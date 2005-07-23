@@ -110,9 +110,9 @@ while ( ($store_name, $store) = each %stores ) {
       like( $feed, qr|<title>Old Node</title>|, "days param works" );
 
       # Test ignoring minor changes.
-      $feed = $rss->recent_changes( ignore_minor_changes => 1 );
+      $feed = $rss->recent_changes( ignore_minor_edits => 1 );
       unlike( $feed, qr|This is a minor change.|,
-              "ignore_minor_changes works" );
+              "ignore_minor_edits works" );
 
       # Test personalised feeds.
       $feed = $rss->recent_changes(

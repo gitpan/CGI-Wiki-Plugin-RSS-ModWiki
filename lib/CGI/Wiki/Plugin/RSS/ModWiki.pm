@@ -3,7 +3,7 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.071';
+$VERSION = '0.072';
 
 use Time::Piece;
 use URI::Escape;
@@ -139,7 +139,10 @@ sub _init {
   print $rss->recent_changes( days => 7 );
 
   # Or ignore minor changes.
-  print $rss->recent_changes( ignore_minor_changes => 1 );
+  # Note that in earlier versions of this module, this param was
+  # called "ignore_minor_changes"; this name will be supported
+  # for the time being, but is deprecated.
+  print $rss->recent_changes( ignore_minor_edits => 1 );
 
   # Personalise your feed further - consider only changes
   # made by Kake to pages about pubs.
@@ -187,7 +190,7 @@ sub recent_changes {
     } else {
         $criteria{last_n_changes} = $args{items} || 15;
     }
-    if ( $args{ignore_minor_changes} ) {
+    if ( $args{ignore_minor_edits} || $args{ignore_minor_changes} ) {
         $criteria{metadata_wasnt} = { major_change => 0 };
     }
     if ( $args{filter_on_metadata} ) {
@@ -309,7 +312,7 @@ sub rss_timestamp {
   } else {
     $criteria{last_n_changes} = $args{items} || 15;
   }
-  if ( $args{ignore_minor_changes} ) {
+  if ( $args{ignore_minor_edits} || $args{ignore_minor_changes} ) {
     $criteria{metadata_wasnt} = { major_change => 0 };
   }
   if ( $args{filter_on_metadata} ) {
