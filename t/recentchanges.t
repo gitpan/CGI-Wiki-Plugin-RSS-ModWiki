@@ -31,8 +31,11 @@ while ( ($store_name, $store) = each %stores ) {
               wiki => $wiki,
               site_name => "CGI::Wiki Test Site",
               make_node_url => sub {
-                  "http://example.com/?id=" . uri_escape($_[0])
-                    . ";version=" . uri_escape($_[1]) },
+                                     my $id = uri_escape($_[0]);
+                                     my $version = $_[1] || '';
+                                     $version = uri_escape($version) if $version;
+                                     "http://example.com/?id=$id;version=$version";
+                                   },
               recent_changes_link => "http://example.com/recentchanges"
       );
       my $rss = eval {

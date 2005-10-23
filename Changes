@@ -1,3 +1,7 @@
+0.073   23 October 2005
+        Make sure node names are XML-safe.
+        Get rid of warnings when tests are run.
+        
 0.072   23 July 2005
         Change name of recent_changes() argument from "ignore_minor_changes"
         to "ignore_minor_edits" for consistency with OpenGuides. The old 

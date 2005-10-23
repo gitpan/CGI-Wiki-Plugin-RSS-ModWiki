@@ -3,7 +3,7 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.072';
+$VERSION = '0.073';
 
 use Time::Piece;
 use URI::Escape;
@@ -261,10 +261,16 @@ sub recent_changes {
         my $rdf_url = $node_url;
         $rdf_url =~ s/\?/\?id=/;
         $rdf_url .= ';format=rdf';
+
+        # make XML-clean
+        my $title = $node_name;
+        $title =~ s/&/&amp;/g;
+        $title =~ s/</&lt;/g;
+        $title =~ s/>/&gt;/g;
         
         push @items, qq{
 <item rdf:about="$url">
-  <title>$node_name</title>
+  <title>$title</title>
   <link>$url</link>
   <description>$description</description>
   <dc:date>$timestamp</dc:date>
