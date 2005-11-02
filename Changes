@@ -1,3 +1,10 @@
+0.08    2 November 2005
+        IMPORTANT CHANGE: There is a new _mandatory_ parameter for
+          invoking this module - site_url. This should be the URL of the
+          site whose RSS feed you are creating.
+        New options for DOAP (http://usefulinc.com/doap) metadata.
+        Drop "ignore_minor_changes". (I told you it was deprecated.)
+          
 0.073   23 October 2005
         Make sure node names are XML-safe.
         Get rid of warnings when tests are run.

@@ -39,7 +39,7 @@ while ( ($store_name, $store) = each %stores ) {
               recent_changes_link => "http://example.com/recentchanges"
       );
       my $rss = eval {
-          CGI::Wiki::Plugin::RSS::ModWiki->new( %default_config );
+          CGI::Wiki::Plugin::RSS::ModWiki->new( %default_config, site_url => "http://example.com/kakeswiki/" );
       };
       is( $@, "",
          "'new' doesn't croak if wiki object and mandatory parameters supplied"
@@ -72,7 +72,8 @@ while ( ($store_name, $store) = each %stores ) {
       # Check that interwiki things are passed through right.
       $rss = CGI::Wiki::Plugin::RSS::ModWiki->new(
           %default_config,
-	  interwiki_identifier => "KakesWiki"
+          interwiki_identifier => "KakesWiki",
+          site_url => "http://example.com/kakeswiki/",
       );
       $feed = $rss->recent_changes;
       like( $feed, qr|<wiki:interwiki>KakesWiki</wiki:interwiki>|,
@@ -85,7 +86,8 @@ while ( ($store_name, $store) = each %stores ) {
               my $node_name = shift;
               return "http://example.com/?action=show_diff;id="
                    . uri_escape($node_name)
-                                      }
+                                      },
+          site_url => "http://example.com/kakeswiki/",
       );
       $feed = $rss->recent_changes;
       like( $feed, qr|<wiki:diff>http://example.com/\?action=show_diff;id=Calthorpe%20Arms</wiki:diff>|,
@@ -98,7 +100,8 @@ while ( ($store_name, $store) = each %stores ) {
               my $node_name = shift;
               return "http://example.com/?action=history;id="
                    . uri_escape($node_name)
-                                      }
+                                      },
+          site_url => "http://example.com/kakeswiki/",
       );
       $feed = $rss->recent_changes;
       like( $feed, qr|<wiki:history>http://example.com/\?action=history;id=Calthorpe%20Arms</wiki:history>|,
