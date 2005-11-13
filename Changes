@@ -1,3 +1,6 @@
+0.081   13 November 2005
+        <dc:creator> was incorrectly specified as <dc:Creator>.
+        
 0.08    2 November 2005
         IMPORTANT CHANGE: There is a new _mandatory_ parameter for
           invoking this module - site_url. This should be the URL of the

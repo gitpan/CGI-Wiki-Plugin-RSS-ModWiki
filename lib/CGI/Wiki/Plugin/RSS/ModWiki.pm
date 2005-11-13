@@ -3,7 +3,7 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.08';
+$VERSION = '0.081';
 
 use Time::Piece;
 use URI::Escape;
@@ -94,7 +94,7 @@ sub recent_changes
 
 if ($self->{software_name})
 {
-  $rss .= qq{<dc:Creator>
+  $rss .= qq{<dc:creator>
   <doap:Project>
     <doap:name>} . $self->{software_name} . qq{</doap:name>\n};
 }
@@ -116,7 +116,7 @@ if ($self->{software_name} && $self->{software_version})
 if ($self->{software_name})
 {
   $rss .= qq{  </doap:Project>
-</dc:Creator>\n};
+</dc:creator>\n};
 }
 
 $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
