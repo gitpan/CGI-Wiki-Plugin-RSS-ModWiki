@@ -1,3 +1,11 @@
+0.09    29 November 2005
+        Use <foaf:maker> instead of <dc:creator> for reasons detailed at
+          http://rdfweb.org/topic/UsingDublinCoreCreator .
+        Fix dates that weren't in W3C Date and Time Format.
+        Change XML namespace "wiki" to be "modwiki"; change URL of namespace
+          to something that doesn't produce a useless 404 error (causing
+          feeds to fail at feedvalidator.org).
+
 0.081   13 November 2005
         <dc:creator> was incorrectly specified as <dc:Creator>.
         

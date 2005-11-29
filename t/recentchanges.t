@@ -53,13 +53,13 @@ while ( ($store_name, $store) = each %stores ) {
       like( $feed, qr|<item rdf:about="http://example.com/\?id=Test%20Node%201;version=1">|,
 	    "make_node_url is used" );
 
-      like( $feed, qr|<wiki:version>1</wiki:version>|,
+      like( $feed, qr|<modwiki:version>1</modwiki:version>|,
 	    "version numbers included in feed" );
 
-      like( $feed, qr|<wiki:status>new</wiki:status>|,
+      like( $feed, qr|<modwiki:status>new</modwiki:status>|,
 	    "page status included in feed" );
 
-      like( $feed, qr|<wiki:importance>major</wiki:importance>|,
+      like( $feed, qr|<modwiki:importance>major</modwiki:importance>|,
 	    "change importance included and defaults to 'major'" );
 
       # Check stuff that comes from the metadata.
@@ -76,7 +76,7 @@ while ( ($store_name, $store) = each %stores ) {
           site_url => "http://example.com/kakeswiki/",
       );
       $feed = $rss->recent_changes;
-      like( $feed, qr|<wiki:interwiki>KakesWiki</wiki:interwiki>|,
+      like( $feed, qr|<modwiki:interwiki>KakesWiki</modwiki:interwiki>|,
             "interwiki identifier passed through OK" );
 
       # Check that diff url comes through.
@@ -90,7 +90,7 @@ while ( ($store_name, $store) = each %stores ) {
           site_url => "http://example.com/kakeswiki/",
       );
       $feed = $rss->recent_changes;
-      like( $feed, qr|<wiki:diff>http://example.com/\?action=show_diff;id=Calthorpe%20Arms</wiki:diff>|,
+      like( $feed, qr|<modwiki:diff>http://example.com/\?action=show_diff;id=Calthorpe%20Arms</modwiki:diff>|,
 	    "make_diff_url used" );
 
       # Check that history url comes through.
@@ -104,7 +104,7 @@ while ( ($store_name, $store) = each %stores ) {
           site_url => "http://example.com/kakeswiki/",
       );
       $feed = $rss->recent_changes;
-      like( $feed, qr|<wiki:history>http://example.com/\?action=history;id=Calthorpe%20Arms</wiki:history>|,
+      like( $feed, qr|<modwiki:history>http://example.com/\?action=history;id=Calthorpe%20Arms</modwiki:history>|,
 	    "make_history_url used" );
 
       # Test the 'items' parameter.

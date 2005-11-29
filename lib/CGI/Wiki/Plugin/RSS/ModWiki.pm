@@ -3,8 +3,9 @@ package CGI::Wiki::Plugin::RSS::ModWiki;
 use strict;
 
 use vars qw( $VERSION );
-$VERSION = '0.081';
+$VERSION = '0.09';
 
+use POSIX 'strftime';
 use Time::Piece;
 use URI::Escape;
 use Carp qw( croak );
@@ -38,6 +39,10 @@ sub new
   {
     $self->{$arg} = $args{$arg} || '';
   }
+
+  $self->{timestamp_fmt} = $CGI::Wiki::Store::Database::timestamp_fmt;
+  $self->{utc_offset} = strftime "%z", localtime;
+  $self->{utc_offset} =~ s/(..)(..)$/$1:$2/;
   
   $self;
 }
@@ -77,24 +82,26 @@ sub recent_changes
 
   my $rss_timestamp = $self->rss_timestamp(%args);
 
+  #"http://purl.org/rss/1.0/modules/wiki/"
   my $rss = qq{<?xml version="1.0" encoding="UTF-8"?>
 
 <rdf:RDF
- xmlns      = "http://purl.org/rss/1.0/"
- xmlns:dc   = "http://purl.org/dc/elements/1.1/"
- xmlns:wiki = "http://purl.org/rss/1.0/modules/wiki/"
- xmlns:rdf  = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
- xmlns:rdfs = "http://www.w3.org/2000/01/rdf-schema#"
- xmlns:doap = "http://usefulinc.com/ns/doap#"
+ xmlns         = "http://purl.org/rss/1.0/"
+ xmlns:dc      = "http://purl.org/dc/elements/1.1/"
+ xmlns:doap    = "http://usefulinc.com/ns/doap#"
+ xmlns:foaf    = "http://xmlns.com/foaf/0.1/"
+ xmlns:rdf     = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:rdfs    = "http://www.w3.org/2000/01/rdf-schema#"
+ xmlns:modwiki = "http://www.usemod.com/cgi-bin/mb.pl?ModWiki"
 >
 
-<channel rdf:about="} . $self->{recent_changes_link}  . qq{">
+<channel rdf:about="">
 
 <dc:publisher>}       . $self->{site_url}   . qq{</dc:publisher>\n};
 
 if ($self->{software_name})
 {
-  $rss .= qq{<dc:creator>
+  $rss .= qq{<foaf:maker>
   <doap:Project>
     <doap:name>} . $self->{software_name} . qq{</doap:name>\n};
 }
@@ -116,14 +123,14 @@ if ($self->{software_name} && $self->{software_version})
 if ($self->{software_name})
 {
   $rss .= qq{  </doap:Project>
-</dc:creator>\n};
+</foaf:maker>\n};
 }
 
 $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
 <link>}               . $self->{recent_changes_link}  . qq{</link>
 <description>}        . $self->{site_description}     . qq{</description>
 <dc:date>}            . $rss_timestamp                . qq{</dc:date>
-<wiki:interwiki>}     . $self->{interwiki_identifier} . qq{</wiki:interwiki>};
+<modwiki:interwiki>}     . $self->{interwiki_identifier} . qq{</modwiki:interwiki>};
 
   my (@urls, @items);
 
@@ -134,11 +141,11 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
     my $timestamp = $change->{last_modified};
     
     # Make a Time::Piece object.
-    my $timestamp_fmt = $CGI::Wiki::Store::Database::timestamp_fmt;
+    my $time = Time::Piece->strptime($timestamp, $self->{timestamp_fmt});
 
-    my $time = Time::Piece->strptime($timestamp, $timestamp_fmt);
-
-    $timestamp = $time->strftime( "%Y-%m-%dT%H:%M:%S" );
+    my $utc_offset = $self->{utc_offset};
+    
+    $timestamp = $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
 
     my $author      = $change->{metadata}{username}[0] || $change->{metadata}{host}[0] || '';
     my $description = $change->{metadata}{comment}[0]  || '';
@@ -189,11 +196,11 @@ $rss .= qq{<title>}   . $self->{site_name}            . qq{</title>
   <description>$description</description>
   <dc:date>$timestamp</dc:date>
   <dc:contributor>$author</dc:contributor>
-  <wiki:status>$status</wiki:status>
-  <wiki:importance>$importance</wiki:importance>
-  <wiki:diff>$diff_url</wiki:diff>
-  <wiki:version>$version</wiki:version>
-  <wiki:history>$history_url</wiki:history>
+  <modwiki:status>$status</modwiki:status>
+  <modwiki:importance>$importance</modwiki:importance>
+  <modwiki:diff>$diff_url</modwiki:diff>
+  <modwiki:version>$version</modwiki:version>
+  <modwiki:history>$history_url</modwiki:history>
   <rdfs:seeAlso rdf:resource="$rdf_url" />
 </item>
 };
@@ -241,13 +248,15 @@ sub rss_timestamp
 
   if ($changes[0]->{last_modified})
   {
-    my $timestamp_fmt = $CGI::Wiki::Store::Database::timestamp_fmt;
-    my $time = Time::Piece->strptime( $changes[0]->{last_modified}, $timestamp_fmt );
-    return $time->strftime;
+    my $time = Time::Piece->strptime( $changes[0]->{last_modified}, $self->{timestamp_fmt} );
+
+    my $utc_offset = $self->{utc_offset};
+    
+    return $time->strftime( "%Y-%m-%dT%H:%M:%S$utc_offset" );
   }
   else
   {
-    return 'Thu Jan 1 00:00:00 1970';
+    return '1970-01-01T00:00:00+0000';
   }
 }
 
